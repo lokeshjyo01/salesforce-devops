@@ -1,0 +1,33 @@
+pipeline:
+  agent any
+  environment:
+    GITHUB_CREDENTIALS: 'github-credentials-id'  # Jenkins credentials ID for GitHub
+    SALESFORCE_CREDENTIALS: 'salesforce-credentials-id'  # Jenkins credentials ID for Salesforce
+  stages:
+    - stage: Checkout
+      steps:
+        - script:
+            # Checkout the source code from GitHub
+            sh '''
+              git url: 'https://github.com/lokeshjyo01/salesforce-devops.git', credentialsId: "${GITHUB_CREDENTIALS}"
+            '''
+    
+    - stage: Salesforce Authentication
+      steps:
+        - script:
+            # Salesforce authentication using stored credentials
+            sh '''
+              sfdx auth:jwt:grant --clientid <SF_CLIENT_ID> --jwtkeyfile <PATH_TO_JWT_KEY> --username <SF_USERNAME> --instanceurl https://login.salesforce.com --setdefaultdevhubusername
+            '''
+    
+    - stage: Deploy to Salesforce
+      steps:
+        - script:
+            # Example of deploying code to Salesforce
+            sh '''
+              sfdx force:source:deploy -p force-app --targetusername <SF_USERNAME>
+            '''
+  post:
+    always:
+      # Post actions, like cleanup or notifications, if necessary
+      echo "Pipeline complete!"
