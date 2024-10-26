@@ -1,0 +1,46 @@
+pipeline {
+  agent any
+  environment {
+    GITHUB_CREDENTIALS = 'lokeshjyo01@gmail.com'             // Jenkins credentials ID for GitHub
+    SALESFORCE_CLIENT_ID = '3MVG9PwZx9R6_UrdOCz94PtbCKyyuodjjAFwBvVlu3xCnJgNwLVAlm_tdXmR0SyK2LplcQkoyweDPkltDH4.r'  // Salesforce Client ID
+    JWT_KEY_FILE = 'G:\\salesforce-devops2\\certificate\\Users\\jdoe\\JWT\\server.key' // Path to Salesforce JWT key
+    SF_USERNAME = 'lokeshkumarjune26@creative-bear-p3toqd.com' // Salesforce Username
+    INSTANCE_URL = 'https://resourceful-impala-cu1rog-dev-ed.trailblaze.lightning.force.com/' // Salesforce Instance URL
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        script {
+          // Checkout the source code from GitHub
+          git url: 'https://github.com/lokeshjyo01/salesforce-devops.git', credentialsId: "${GITHUB_CREDENTIALS}"
+        }
+      }
+    }
+    stage('Salesforce Authentication') {
+      steps {
+        script {
+          // Salesforce authentication using stored credentials
+          sh """
+            sfdx auth:jwt:grant --clientid ${SALESFORCE_CLIENT_ID} --jwtkeyfile ${JWT_KEY_FILE} --username ${SF_USERNAME} --instanceurl ${INSTANCE_URL} --setdefaultdevhubusername
+          """
+        }
+      }
+    }
+    stage('Deploy to Salesforce') {
+      steps {
+        script {
+          // Deploying code to Salesforce
+          sh """
+            sfdx force:source:deploy -p force-app --targetusername ${SF_USERNAME}
+          """
+        }
+      }
+    }
+  }
+  post {
+    always {
+      // Post actions, like cleanup or notifications, if necessary
+      echo "Pipeline complete!"
+    }
+  }
+}
